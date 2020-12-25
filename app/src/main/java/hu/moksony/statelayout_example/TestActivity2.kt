@@ -26,7 +26,7 @@ class TestActivity2 : Activity() {
 
 
         CoroutineScope(Dispatchers.Main).launch {
-            delay(1000)
+            delay(2000)
             stateLayout.setState(R.id.state_loading)
             delay(5000)
             stateLayout.setState(R.id.state_network_error)

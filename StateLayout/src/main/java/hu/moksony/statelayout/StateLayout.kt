@@ -6,7 +6,6 @@ import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.core.view.children
 
 class StateLayout : FrameLayout {
 
@@ -68,6 +67,7 @@ class StateLayout : FrameLayout {
         }
         nextState.view?.apply { visibility = View.VISIBLE }
         this.currentState = nextState
+        this.currentStateId = this.currentState.viewId!!
     }
 
 
@@ -112,31 +112,29 @@ class StateLayout : FrameLayout {
 
     fun hideState(state: State) {
         if (this.mode == LayoutMode.OVERLAY_ON_CONTENT && state.viewId == contentState.viewId) {
-
+            Log.d("StateLayout","Skip hide content view")
         } else {
             state.view?.let { it.visibility = View.GONE }
         }
     }
 
-    fun addState(state: State, stateName: Int) {
-        if (!states.containsKey(stateName)) {
-            this.states[stateName] = state
-            Log.d("StateLayout", "$stateName added to list.")
-            if (stateName == this.currentStateId) { //we are waiting this view....
-                updateVisibility(this.currentState, state)
-            } else if (this.currentState != state) { //just hide view
-                hideState(state)
-            }
-        } else {
-            Log.d("StateLayout", "State($stateName) already added.")
+    fun addState(givenState: State, stateId: Int) {
+        val state = states[stateId] ?: givenState
+        this.states[stateId] = state
+        Log.d("StateLayout", "$stateId added to list.")
+
+        if (stateId == this.currentStateId) { //we are waiting this view....
+            updateVisibility(this.currentState, state)
+        } else if (this.currentState != state) { //just hide view
+            hideState(state)
         }
     }
 
-    private fun addState(view: View, stateName: Int = view.id) {
-        val state = states[stateName] ?: State().apply {
-            this.view = view
+    private fun addState(givenView: View, stateId: Int = givenView.id) {
+        val state = states[stateId] ?: State().also { state ->
+            state.view = givenView
         }
-        addState(state, stateName)
+        addState(state, stateId)
     }
 
     override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
