@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="StateLayout">
+        <attr name="sl_mode" format="enum">
+            <enum name="single_layer" value="0" />
+            <enum name="layer_on_content" value="1" />
+        </attr>
+        <attr name="state" format="integer"/>
+    </declare-styleable>
+</resources>
