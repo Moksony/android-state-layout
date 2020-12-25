@@ -3,6 +3,7 @@ package hu.moksony.statelayout
 import android.content.Context
 import android.util.AttributeSet
 import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -78,28 +79,28 @@ class StateLayout : FrameLayout {
     }
 
     private fun showState(state: State) {
-        var view = state.view
+        var stateView = state.view
         val viewId = state.viewId
-        if (view == null) {
+        if (stateView == null) {
             Log.d("StateLayout", "View is null.")
             if (viewId != null) {
                 Log.d("StateLayout", "Create View by id")
-                view = inflate(context, viewId, this)
-                state.view = view
-                if (view != null) {
-                    listener?.onStateViewCreated(view, state)
+                stateView = LayoutInflater.from(context).inflate(viewId, this, false)
+                state.view = stateView
+                if (stateView != null) {
+                    listener?.onStateViewCreated(stateView, state)
                 }
             } else {
                 Log.d("StateLayout", "Create View by State::createView function")
-                view = state.createView(this, context)
-                if (view != null) {
-                    state.view = view
-                    listener?.onStateViewCreated(view, state)
-                    if (view.parent == null) {
-                        addView(view)
-                    }
+                stateView = state.createView(this, context)
+                if (stateView != null) {
+                    state.view = stateView
+                    listener?.onStateViewCreated(stateView, state)
                 }
             }
+        }
+        if (stateView != null && stateView.parent == null) {
+            addView(stateView)
         }
         updateVisibility(currentState, state)
         listener?.onStateViewActivated(state)
@@ -111,14 +112,18 @@ class StateLayout : FrameLayout {
     }
 
     fun hideState(state: State) {
-        if (this.mode == LayoutMode.OVERLAY_ON_CONTENT && state.viewId == contentState.viewId) {
-            Log.d("StateLayout","Skip hide content view")
+        if (this.mode == LayoutMode.OVERLAY_ON_CONTENT && state.stateId == contentState.stateId) {
+            Log.d("StateLayout", "Skip hide content view")
         } else {
             state.view?.let { it.visibility = View.GONE }
         }
     }
 
-    fun addState(givenState: State, stateId: Int) {
+    fun addState(givenState: State) {
+        val stateId = givenState.stateId
+        if (givenState.view == this) {
+            throw Exception("View can not be self")
+        }
         val state = states[stateId] ?: givenState
         this.states[stateId] = state
         Log.d("StateLayout", "$stateId added to list.")
@@ -131,10 +136,10 @@ class StateLayout : FrameLayout {
     }
 
     private fun addState(givenView: View, stateId: Int = givenView.id) {
-        val state = states[stateId] ?: State().also { state ->
+        val state = states[stateId] ?: State(stateId).also { state ->
             state.view = givenView
         }
-        addState(state, stateId)
+        addState(state)
     }
 
     override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {

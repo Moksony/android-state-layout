@@ -1,4 +1,5 @@
 package hu.moksony.statelayout
 
-class ContentState : State() {
-}
+import hu.moksony.statelayout.R
+
+class ContentState : State(R.id.state_content) {}

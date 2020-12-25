@@ -32,14 +32,14 @@ class MainActivity : AppCompatActivity() {
         stateLayout = findViewById(R.id.stateLayout)
         stateLayout.setState(R.id.state_progress)
 
-        val networkErrorState = state {
+        val networkErrorState = state(R.id.state_network_error) {
             val networkErrorBinding =
                 StateNetworkErrorBinding.inflate(layoutInflater, null, false)
             networkErrorBinding.ctl = this
             networkErrorBinding.lifecycleOwner = this
             networkErrorBinding.root
         }
-        stateLayout.addState(networkErrorState, R.id.state_network_error)
+        stateLayout.addState(networkErrorState)
 
         CoroutineScope(Dispatchers.Main).launch {
             delay(2000)
