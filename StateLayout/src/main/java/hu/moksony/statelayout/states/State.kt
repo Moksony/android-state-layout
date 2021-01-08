@@ -23,8 +23,9 @@ open class State(val viewId: Int) : BaseObservable() {
             return this
         }
 
-        fun setMessage(msg: String) {
+        fun setMessage(msg: String): Builder<S> {
             this._msgString = msg
+            return this
         }
 
         fun setMessage(msg: Int): Builder<S> {
