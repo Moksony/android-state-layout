@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="state_content" type="id" />
+    <item name="state_error_view_retry" type="id" />
+    <item name="state_progress_view_progress" type="id" />
+    <item name="state_view_image" type="id" />
+    <item name="state_view_text" type="id" />
 </resources>

@@ -6,22 +6,26 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
 import android.widget.FrameLayout
+import hu.moksony.statelayout.states.ContentState
+import hu.moksony.statelayout.states.State
 
 class StateLayout : FrameLayout {
 
-    enum class LayoutMode {
-        SINGLE_LAYER,
-        OVERLAY_ON_CONTENT,
+    companion object {
+        const val TAG = "StateLayout"
     }
 
-    var mode = LayoutMode.SINGLE_LAYER
-    private val contentState = ContentState()
+    var showAnimation: Animation? = null
+    var hideAnimation: Animation? = null
 
-    var currentState: State = contentState
-    var currentStateId: Int = -1
 
-    private val states = HashMap<Int, State>()
+    private var contentState: ContentState? = null
+
+    var currentState: State? = contentState
+    var currentStateId: Int? = null
+
 
     var listener: StateLayoutEvents? = null
 
@@ -57,24 +61,43 @@ class StateLayout : FrameLayout {
         val ta = ctx.obtainStyledAttributes(attrs, R.styleable.StateLayout)
         val modeIndex = ta.getInt(R.styleable.StateLayout_sl_mode, 0)
         this.currentStateId = ta.getResourceId(R.styleable.StateLayout_state, -1)
-        this.mode = LayoutMode.values()[modeIndex]
         ta.recycle()
     }
 
-    fun updateVisibility(currentState: State, nextState: State) {
-        Log.d("StateLayout", "Update View ${currentState.viewId} -> ${nextState.viewId}")
-        if (currentState != nextState) {
+    fun updateVisibility(currentState: State?, nextState: State) {
+        Log.d(
+            TAG,
+            "Update View [${currentState?.viewId}] ${currentState?.javaClass?.simpleName} -> [${nextState.viewId}] ${nextState.javaClass.simpleName}"
+        )
+
+        if (currentState != null && currentState != nextState) {
             hideState(currentState)
         }
-        nextState.view?.apply { visibility = View.VISIBLE }
+
+        nextState.view?.let { stateView ->
+            stateView.visibility = View.VISIBLE
+
+            showAnimation?.let { anim ->
+                currentState?.view?.clearAnimation()
+                anim.fillAfter = true
+                stateView.animation = anim
+                anim.start()
+            }
+        }
         this.currentState = nextState
-        this.currentStateId = this.currentState.viewId!!
+        this.currentStateId = this.currentState?.viewId
     }
 
 
     fun setState(state: State) {
-        if (currentState != state) {
-            showState(state)
+        var nextState: State? = null
+        if (state is ContentState) {
+            nextState = this.contentState
+        } else if (currentState?.viewId != state.viewId) {
+            nextState = state
+        }
+        if (nextState != null) {
+            showState(nextState)
         }
     }
 
@@ -82,23 +105,15 @@ class StateLayout : FrameLayout {
         var stateView = state.view
         val viewId = state.viewId
         if (stateView == null) {
-            Log.d("StateLayout", "View is null.")
-            if (viewId != null) {
-                Log.d("StateLayout", "Create View by id")
-                stateView = LayoutInflater.from(context).inflate(viewId, this, false)
-                state.view = stateView
-                if (stateView != null) {
-                    listener?.onStateViewCreated(stateView, state)
-                }
-            } else {
-                Log.d("StateLayout", "Create View by State::createView function")
-                stateView = state.createView(this, context)
-                if (stateView != null) {
-                    state.view = stateView
-                    listener?.onStateViewCreated(stateView, state)
-                }
+            Log.d(TAG, "View is null.")
+            Log.d(TAG, "Create View by id")
+            stateView = LayoutInflater.from(context).inflate(viewId, this, false)
+            state.view = stateView
+            if (stateView != null) {
+                listener?.onStateViewCreated(stateView, state)
             }
         }
+
         if (stateView != null && stateView.parent == null) {
             addView(stateView)
         }
@@ -106,50 +121,29 @@ class StateLayout : FrameLayout {
         listener?.onStateViewActivated(state)
     }
 
-    fun setState(state: Int) {
-        val s = this.states[state] ?: throw Exception("State not found $state")
-        setState(s)
-    }
-
     fun hideState(state: State) {
-        if (this.mode == LayoutMode.OVERLAY_ON_CONTENT && state.stateId == contentState.stateId) {
-            Log.d("StateLayout", "Skip hide content view")
+        if (state.allowOnContent) {
+            Log.d(TAG, "Skip hide content view")
         } else {
             state.view?.let { it.visibility = View.GONE }
         }
     }
 
-    fun addState(givenState: State) {
-        val stateId = givenState.stateId
-        if (givenState.view == this) {
-            throw Exception("View can not be self")
-        }
-        val state = states[stateId] ?: givenState
-        this.states[stateId] = state
-        Log.d("StateLayout", "$stateId added to list.")
-
-        if (stateId == this.currentStateId) { //we are waiting this view....
-            updateVisibility(this.currentState, state)
-        } else if (this.currentState != state) { //just hide view
-            hideState(state)
-        }
-    }
-
-    private fun addState(givenView: View, stateId: Int = givenView.id) {
-        val state = states[stateId] ?: State(stateId).also { state ->
-            state.view = givenView
-        }
-        addState(state)
-    }
 
     override fun addView(child: View?, index: Int, params: ViewGroup.LayoutParams?) {
         super.addView(child, index, params)
         if (child != null) {
-            if (this.contentState.view == null) {
-                this.contentState.view = child
-                this.contentState.viewId = child.id
+            var cs = this.contentState
+            if (cs == null) {
+                val id = child.id
+                if (id <= 0) {
+                    child.id = R.id.state_content
+                }
+                cs = ContentState(child.id)
+                cs.view = child
+                this.contentState = cs
+                this.currentState = cs
             }
-            addState(child)
         }
     }
 }

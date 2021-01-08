@@ -4,10 +4,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <data>
+
         <variable
             name="ctl"
             type="hu.moksony.statelayout_example.MainActivity" />
     </data>
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -16,14 +18,12 @@
         <hu.moksony.statelayout.StateLayout
             android:id="@+id/stateLayout"
             android:layout_width="match_parent"
-            app:sl_mode="layer_on_content"
-            app:state="@id/state_progress"
             android:layout_height="match_parent"
-
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
+            app:layout_constraintTop_toTopOf="parent"
+            app:sl_mode="layer_on_content">
 
             <RelativeLayout
                 android:id="@+id/state_content"
@@ -37,20 +37,6 @@
                     android:text="Hello World!" />
             </RelativeLayout>
 
-            <RelativeLayout
-                android:id="@+id/state_progress"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent">
-
-                <ProgressBar
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerInParent="true"
-                    android:max="100"
-                    android:progress="@{ctl.downloadProgress}"
-                    android:text="Hello World!" />
-            </RelativeLayout>
 
         </hu.moksony.statelayout.StateLayout>
 

@@ -27,14 +27,10 @@ class TestActivity2 : Activity() {
 
         CoroutineScope(Dispatchers.Main).launch {
             delay(2000)
-            stateLayout.setState(R.id.state_loading)
             delay(5000)
-            stateLayout.setState(R.id.state_network_error)
             delay(2000)
-            stateLayout.setState(R.id.state_loading)
             delay(1500)
             adapter.addAll(listOf("Banana", "Orange"))
-            stateLayout.setState(R.id.state_content)
         }
     }
 }
