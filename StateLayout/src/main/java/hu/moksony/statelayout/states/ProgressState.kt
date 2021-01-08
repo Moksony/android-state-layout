@@ -8,7 +8,7 @@ import hu.moksony.statelayout.R
 
 class ProgressState(stateId: Int) : State(stateId) {
 
-    private var max: Int = 0
+    var max: Int = 0
         set(value) {
             if (field != value) {
                 field = value
@@ -16,7 +16,7 @@ class ProgressState(stateId: Int) : State(stateId) {
             }
         }
 
-    private var progress: Int = 0
+    var progress: Int = 0
         set(value) {
             if (field != value) {
                 field = value
