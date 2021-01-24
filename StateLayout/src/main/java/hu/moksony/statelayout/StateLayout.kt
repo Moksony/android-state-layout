@@ -71,7 +71,9 @@ class StateLayout : FrameLayout {
         )
 
         if (currentState != null && currentState != nextState) {
-            hideState(currentState)
+            if (!(nextState.allowOnContent && currentState is ContentState)) {
+                hideState(currentState)
+            }
         }
 
         nextState.view?.let { stateView ->
@@ -96,6 +98,7 @@ class StateLayout : FrameLayout {
         } else if (currentState?.viewId != state.viewId) {
             nextState = state
         }
+
         if (nextState != null) {
             showState(nextState)
         }
