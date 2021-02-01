@@ -4,22 +4,32 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.DrawableRes
+import androidx.annotation.IdRes
 import androidx.annotation.LayoutRes
 import androidx.databinding.BaseObservable
 import hu.moksony.statelayout.R
 
 open class State(val viewId: Int) : BaseObservable() {
+    companion object {
+        val ContentState = hu.moksony.statelayout.states.ContentState()
+    }
 
     open class Builder<S> {
         private var _viewId: Int? = null
         private var _view: View? = null
+        private var _layoutId: Int? = null
         private var _drawable: Int? = null
         private var _allowOnContent: Boolean = false
         private var _msgString: String? = null
         private var _msgResId: Int? = null
 
-        fun setViewId(@LayoutRes viewId: Int): Builder<S> {
+        fun setViewId(@IdRes viewId: Int): Builder<S> {
             this._viewId = viewId
+            return this
+        }
+
+        fun setLayoutId(@LayoutRes layoutId: Int): Builder<S> {
+            this._layoutId = layoutId
             return this
         }
 
@@ -45,11 +55,7 @@ open class State(val viewId: Int) : BaseObservable() {
         }
 
         protected fun requireId(): Int {
-            val viewId = this._viewId ?: this._view?.id ?: -1
-            if (viewId <= 0) {
-                throw Exception("View must have id")
-            }
-            return viewId
+            return _viewId ?: _view?.id ?: -1
         }
 
 
@@ -64,6 +70,7 @@ open class State(val viewId: Int) : BaseObservable() {
         }
 
         open fun apply(state: State) {
+            state.layoutId = this._layoutId
             state.allowOnContent = this._allowOnContent
             state.drawableResId = this._drawable
             state.msgResId = this._msgResId
@@ -71,6 +78,7 @@ open class State(val viewId: Int) : BaseObservable() {
         }
     }
 
+    var layoutId: Int? = null
     var drawableResId: Int? = null
         set(value) {
             if (field != value) {

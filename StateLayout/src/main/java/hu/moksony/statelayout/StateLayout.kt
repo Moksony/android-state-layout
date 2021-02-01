@@ -8,6 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.Animation
 import android.widget.FrameLayout
+import androidx.annotation.IdRes
+import androidx.annotation.LayoutRes
+import androidx.core.view.children
 import hu.moksony.statelayout.states.ContentState
 import hu.moksony.statelayout.states.State
 
@@ -20,6 +23,8 @@ class StateLayout : FrameLayout {
     var showAnimation: Animation? = null
     var hideAnimation: Animation? = null
 
+    //map to LayoutId -> ViewId
+    val layoutToIdMap = mutableMapOf<Int, Int>()
 
     private var contentState: ContentState? = null
 
@@ -95,7 +100,7 @@ class StateLayout : FrameLayout {
         var nextState: State? = null
         if (state is ContentState) {
             nextState = this.contentState
-        } else if (currentState?.viewId != state.viewId) {
+        } else if ((currentState?.viewId != state.viewId) || currentState?.layoutId != state.layoutId) {
             nextState = state
         }
 
@@ -104,13 +109,43 @@ class StateLayout : FrameLayout {
         }
     }
 
+    private fun findChild(@IdRes viewId: Int): View? {
+        if (viewId != View.NO_ID) {
+            return children.find { it.id == viewId }
+        }
+        return null
+    }
+
+    private fun inflate(@LayoutRes layoutId: Int): View? {
+        Log.d(TAG, "inflate: $layoutId")
+        val viewId = layoutToIdMap[layoutId] ?: View.NO_ID
+        var view: View? = null
+        if (viewId != View.NO_ID) {
+            Log.d(TAG, "inflate: Found view in mapping")
+            view = findChild(viewId)
+        }
+        if (view == null) {
+            Log.d(TAG, "inflate: create from layoutId")
+            view = LayoutInflater.from(context).inflate(layoutId, this, false)
+            if (view.id > 0) {
+                layoutToIdMap[layoutId] = view.id
+            }
+        }
+        return view
+    }
+
     private fun showState(state: State) {
         var stateView = state.view
         val viewId = state.viewId
+        val layoutIdRes = state.layoutId
         if (stateView == null) {
             Log.d(TAG, "View is null.")
-            Log.d(TAG, "Create View by id")
-            stateView = LayoutInflater.from(context).inflate(viewId, this, false)
+            stateView = findChild(viewId)
+
+            val stillNull = stateView == null
+            if (stillNull && layoutIdRes != null) {
+                stateView = inflate(layoutIdRes)
+            }
             state.view = stateView
             if (stateView != null) {
                 listener?.onStateViewCreated(stateView, state)

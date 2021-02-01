@@ -3,6 +3,7 @@ package hu.moksony.statelayout_example
 import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import androidx.databinding.DataBindingUtil
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
 
+    private val TAG = "MainActivity"
     private lateinit var stateLayout: StateLayout
 
     val downloadProgress = MutableLiveData<Int>()
@@ -34,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         stateLayout.showAnimation = AnimationUtils.loadAnimation(this, R.anim.state_show_fade_scale)
 
         stateObserver.observe(this) {
+            Log.d(TAG, "onCreate: ${it.javaClass.canonicalName}")
             stateLayout.setState(it)
         }
 
@@ -41,17 +44,16 @@ class MainActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.Main).launch {
             val loadingState = LoadingState
                 .Builder()
-                .setViewId(R.layout.state_loading)
+                .setLayoutId(R.layout.state_loading)
                 .build()
             stateObserver.postValue(loadingState)
             delay(2000)
-
             stateObserver.postValue(ErrorState
                 .Builder()
                 .setRetryCallback() {
                     retry()
                 }
-                .setViewId(R.layout.state_error)
+                .setLayoutId(R.layout.state_error)
                 .setMessage(R.string.network_error)
                 .setDrawable(R.drawable.ic_launcher_background)
                 .build())
@@ -64,19 +66,14 @@ class MainActivity : AppCompatActivity() {
 
     fun retry() {
         CoroutineScope(Dispatchers.Main).launch {
-            val loadingState = ProgressState
+            val loadingState = LoadingState
                 .Builder()
-                .setMax(100)
-                .setProgressViewId(R.id.state_progress_view_progress)
-                .setViewId(R.layout.state_progress)
-                .build() as ProgressState
-            stateObserver.postValue(loadingState)
+                .setLayoutId(R.layout.state_loading)
+                .build() as LoadingState
 
-            for (i in 1..100) {
-                loadingState.progressAdvice()
-                delay(100)
-            }
-            stateObserver.postValue(ContentState())
+            stateObserver.postValue(loadingState)
+            delay(2000)
+            stateObserver.postValue(State.ContentState)
         }
     }
 }
