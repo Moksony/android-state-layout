@@ -76,7 +76,8 @@ class StateLayout : FrameLayout {
         )
 
         if (currentState != null && currentState != nextState) {
-            if (!(nextState.allowOnContent && currentState is ContentState)) {
+            val showAsOverlay = !(nextState.allowOnContent && currentState is ContentState)
+            if (showAsOverlay || nextState is ContentState) {
                 hideState(currentState)
             }
         }
@@ -95,6 +96,12 @@ class StateLayout : FrameLayout {
         this.currentStateId = this.currentState?.viewId
     }
 
+    fun showContentState() {
+        val cState = this.contentState
+        if (cState != null) {
+            this.setState(cState)
+        }
+    }
 
     fun setState(state: State) {
         var nextState: State? = null
@@ -102,6 +109,8 @@ class StateLayout : FrameLayout {
             nextState = this.contentState
         } else if ((currentState?.viewId != state.viewId) || currentState?.layoutId != state.layoutId) {
             nextState = state
+        } else {
+            Log.d(TAG, "setState: State is same")
         }
 
         if (nextState != null) {
@@ -160,11 +169,7 @@ class StateLayout : FrameLayout {
     }
 
     fun hideState(state: State) {
-        if (state.allowOnContent) {
-            Log.d(TAG, "Skip hide content view")
-        } else {
-            state.view?.let { it.visibility = View.GONE }
-        }
+        state.view?.let { it.visibility = View.GONE }
     }
 
 
